@@ -1,0 +1,111 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+<style>
+    /*body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f4f4f4;
+    }*/
+
+    .container {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    input[type="file"] {
+        margin-bottom: 20px;
+    }
+
+    button {
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+        button:disabled {
+            background-color: #cccccc;
+        }
+
+    .output {
+        margin-top: 20px;
+        font-size: 18px;
+    }
+</style>
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <div class="container">
+        <h1>Comprimir PDF</h1>
+        <input type="file" id="pdfInput" accept=".pdf">
+        <br>
+        <button id="compressBtn" disabled>Comprimir PDF</button>
+        <div class="output" id="output"></div>
+    </div>
+</div>
+
+<script>
+    const pdfInput = document.getElementById('pdfInput');
+    const compressBtn = document.getElementById('compressBtn');
+    const outputDiv = document.getElementById('output');
+    let originalFileSize = 0;
+
+    // Habilitar el botón de compresión cuando se selecciona un archivo
+    pdfInput.addEventListener('change', function() {
+        if (pdfInput.files.length > 0) {
+            compressBtn.disabled = false;
+        } else {
+            compressBtn.disabled = true;
+        }
+    });
+
+    compressBtn.addEventListener('click', async function() {
+        const file = pdfInput.files[0];
+        originalFileSize = file.size;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            // Convertir el archivo PDF a bytes y llamar al endpoint
+            const pdfBytes = await file.arrayBuffer();
+            console.log(pdfBytes);
+
+            const response = await fetch('http://localhost:5106/api/Pdf/compress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(Array.from(new Uint8Array(pdfBytes)))
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al comprimir el PDF');
+            }
+
+            const compressedPdfBytes = await response.arrayBuffer();
+            const compressedFileSize = compressedPdfBytes.byteLength;
+
+            const reduction = ((originalFileSize - compressedFileSize) / originalFileSize) * 100;
+
+            // Mostrar el resultado de la compresión
+            outputDiv.innerHTML = `
+                <p>Tamaño original: ${(originalFileSize / (1024 * 1024)).toFixed(2)} MB</p>
+                <p>Tamaño comprimido: ${(compressedFileSize / (1024 * 1024)).toFixed(2)} MB</p>
+                <p>Reducción: ${reduction.toFixed(2)}%</p>
+            `;
+        } catch (error) {
+            outputDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+        }
+    });
+</script>
