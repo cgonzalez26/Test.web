@@ -45,6 +45,11 @@
 </style>
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
+<script>
+     fetch("http://localhost:5106/WeatherForecast")
+    .then(reponse => reponse.json())
+    .then(data => console.log(data));
+</script>
     <div class="container">
         <h1>Comprimir PDF</h1>
         <input type="file" id="pdfInput" accept=".pdf">
@@ -70,6 +75,57 @@
     });
 
     compressBtn.addEventListener('click', async function() {
+        const fileInput = document.getElementById('pdfInput');
+        const file = fileInput.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+
+            reader.onload = async function (event) {
+                // Obtener los bytes en base64
+                const base64Data = event.target.result.split(',')[1];
+
+                // Crear un objeto JSON con los datos en base64
+                const payload = {
+                    pdfBytes: base64Data
+                };
+
+                // Realizar la solicitud POST a la API
+                const response = await fetch('http://localhost:5106/api/Pdf/compress', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const compressedData = await response.json();
+                    console.log("Archivo comprimido:", compressedData);
+                    // Aquí puedes manejar el archivo comprimido.
+                    const compressedPdfBytes = await response.arrayBuffer();
+                    const compressedFileSize = compressedPdfBytes.byteLength;
+
+                    const reduction = ((originalFileSize - compressedFileSize) / originalFileSize) * 100;
+
+                    // Mostrar el resultado de la compresión
+                    outputDiv.innerHTML = `
+                        <p>Tamaño original: ${(originalFileSize / (1024 * 1024)).toFixed(2)} MB</p>
+                        <p>Tamaño comprimido: ${(compressedFileSize / (1024 * 1024)).toFixed(2)} MB</p>
+                        <p>Reducción: ${reduction.toFixed(2)}%</p>
+                    `;
+                } else {
+                    console.error("Error al comprimir el archivo-", response.statusText);
+                }
+            };
+
+            reader.readAsDataURL(file);
+        } else {
+            console.error("Por favor selecciona un archivo PDF");
+        }
+    });
+
+    /*compressBtn.addEventListener('click', async function() {
         const file = pdfInput.files[0];
         originalFileSize = file.size;
 
@@ -107,5 +163,5 @@
         } catch (error) {
             outputDiv.innerHTML = `<p>Error: ${error.message}</p>`;
         }
-    });
+    });*/
 </script>

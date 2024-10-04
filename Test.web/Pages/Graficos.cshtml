@@ -1,0 +1,294 @@
+﻿@page
+@model Test.web.Pages.GraficosModel
+@{
+    ViewData["Title"] = "Gráficos con ChartJs";
+}
+<style>
+    .contenedor{
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        gap: 1em; /* Espacio entre los divs */
+    }
+
+    .child {
+        flex: 1; /* Cada div ocupará el 50% del ancho del contenedor */
+        padding: 10px;
+        text-align: center;
+        gap: 
+    }
+</style>
+<h1>@ViewData["Title"]</h1>
+
+<p>Test de Gráficos.</p>
+<div class="contenedor">
+   
+    <div class="child">
+        <canvas id="barChart" width="400" height="600"></canvas>
+    </div>
+
+    <div class="child">
+        <canvas id="barverticalChart" width="400" height="400"></canvas>
+    </div>
+
+    <!--<div class="child">
+        <canvas id="myLineChart" width="400" height="200"></canvas>
+    </div>-->
+    <div class="child">
+        <canvas id="myPieChart" width="400" height="400"></canvas>
+    </div>
+</div>
+
+<script>
+    var ctx = document.getElementById('myPieChart').getContext('2d');
+    var myPieChart = new Chart(ctx, {
+        type: 'pie',  // Tipo de gráfico
+        data: {
+            labels: ['DC1','DC2','DC3','DC4','DC5','DC6','DC7','DC8','DC9','OAL'], // Etiquetas para las porciones
+            datasets: [{
+                label: 'Derivaciones a Centro de Mediación',
+                data: [387,405, 345, 414, 357, 58, 40, 22, 306, 7],  // Datos de ejemplo
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',  // Color 1
+                    'rgba(54, 162, 235, 0.8)',  // Color 2
+                    'rgba(255, 206, 86, 0.8)',  // Color 3
+                    'rgba(75, 192, 192, 0.8)',  // Color 4
+                    'rgba(153, 102, 255, 0.8)', // Color 5
+                    'rgba(255, 159, 64, 0.8)',  // Color 6
+                    'rgba(201, 203, 207, 0.8)', // Color 7
+                    'rgba(93, 172, 129, 0.8)',  // Color 8
+                    'rgba(139, 222, 224, 0.8)', // Color 9
+                    'rgba(174, 126, 252, 0.8)'  // Color 10
+                ],
+                borderColor: [
+                    'rgba(255, 255, 255, 1)',
+                ],
+                borderWidth: 1
+            }]
+        },      
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'MEDIACION'  // Título del gráfico
+                },
+                datalabels: {
+                    color: '#000', // Color del texto dentro de cada rodaja
+                    /*formatter: (value, context) => {
+                        let sum = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        let percentage = (value * 100 / sum).toFixed(2) + "%";
+                        return percentage; // Muestra el porcentaje dentro de cada rodaja
+                    },*/
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+    
+
+    var ctx = document.getElementById('barChart').getContext('2d');
+
+    var myBarChart = new Chart(ctx, {
+        type: 'bar',  // Tipo de gráfico
+        data: {
+            labels: ['DC1', 'DC2', 'DC3', 'DC4', 'DC5', 'DC6', 'DC7', 'DC8', 'DC9', 'OAL'],  // Etiquetas del eje X
+            datasets: [
+                {
+                    label: 'Derivaciones de MD no Ingresadas',
+                    data: [63, 76, 47, 124, 34, 26, 28, 17, 5, 6], // Valores de ejemplo
+                    backgroundColor: '#F44240',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1,
+                    barThickness: 15,  // Ajusta el ancho de las barras
+                    /*minBarLength: 100  // Longitud mínima de las barras*/
+                },
+                {
+                    label: 'Derivaciones de MD no Iniciadas',
+                    data: [132, 523, 33, 141, 79, 248, 0, 10, 34, 204], // Valores de ejemplo
+                    backgroundColor: '#31AEDD',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                    barThickness: 15,  // Ajusta el ancho de las barras
+                },
+                {
+                    label: 'Derivaciones de MD en Consulta',
+                    data: [969, 523, 1063, 857, 1009, 175, 393, 348, 1002, 80],  // Valores de ejemplo
+                    backgroundColor: '#F5C051',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 1,
+                    barThickness: 15,  // Ajusta el ancho de las barras
+                }
+            ]
+        },
+        options: {
+            indexAxis: 'y', // Hace que las barras sean horizontales
+            scales: {
+                x: {
+                    beginAtZero: true // Empieza desde cero en el eje X
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false,  // Ajusta el tamaño del gráfico
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'NO JUDICIALIZADOS'  // Título del gráfico
+                },
+                // Plugin para mostrar etiquetas dentro de las barras
+                datalabels: {
+                    /*anchor: 'end',
+                    align: 'left',  // Ajusta la posición dentro de las barras*/
+                    anchor: 'center',  // Posiciona la etiqueta en el centro de la barra
+                    align: 'center',   // Alinea la etiqueta dentro de la barra
+                    offset: -10,  // Ajusta la distancia entre la etiqueta y el borde de la barra
+                    formatter: function (value, context) {
+                        return value;  // Muestra el valor de cada barra
+                    },
+                    font: {
+                        weight: 'bold',
+                        size: 11
+                    },
+                    color: 'black'  // Color de las etiquetas
+                }
+            },
+            // Ajusta el espaciado entre barras
+            categoryPercentage: 0.8,  // Controla el porcentaje de espacio disponible para cada categoría
+            barPercentage: 0.9  // Controla el espacio que ocupa cada barra dentro de su categoría
+        },
+        plugins: [ChartDataLabels]  // Activa el plugin de etiquetas
+    });
+
+    var ctx = document.getElementById('barverticalChart').getContext('2d');
+
+    var myBarChart = new Chart(ctx, {
+        type: 'bar',  // Tipo de gráfico (barra vertical)
+        data: {
+            labels: ['DC1', 'DC2', 'DC3', 'DC4', 'DC5', 'DC6', 'DC7', 'DC8', 'DC9', 'OAL'],  // Etiquetas del eje X
+            datasets: [
+                {
+                    label: 'Causas Iniciadas',
+                    data: [161, 288, 499, 216, 297,  73, 59, 99, 510, 31], // Valores de ejemplo
+                    backgroundColor: '#1998CB',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Causas En Trámite',
+                    data: [850, 850, 872, 790, 887, 566, 552, 400, 772, 19], // Valores de ejemplo
+                    backgroundColor: '#14CC60',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Causas Terminadas',
+                    data: [289, 411, 756, 316, 316, 143, 23, 311, 445,34], // Valores de ejemplo
+                    backgroundColor: '#F0CD13',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Causas Por Ausente',
+                    data: [0, 3, 5, 4, 1, 16, 3, 31, 5, 3], // Valores de ejemplo
+                    backgroundColor: '#FF696B',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {            
+            scales: {
+                x: {
+                    beginAtZero: true, // Empieza desde cero en el eje X
+                    grid: {
+                        offset: true
+                    }
+                    /*ticks: {
+                        padding: 10 // Agregar espacio entre las etiquetas y las barras
+                    }*/
+                },
+                y: {
+                    beginAtZero: true, // Empieza desde cero en el eje Y
+                    /*ticks: {
+                        padding: 20 // Agregar espacio entre las etiquetas y las barras
+                    }*/
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false,  // Ajusta el tamaño del gráfico
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'MOVIMIENTOS'  // Título del gráfico
+                },
+                // Plugin para mostrar etiquetas encima de las barras
+                datalabels: {
+                    anchor: 'end',
+                    /*align: 'top',*/
+                    align: function (context) {
+                        // Si el valor es muy alto, ajusta las etiquetas para que no se superpongan
+                        const index = context.dataIndex;
+                        const value = context.dataset.data[index];
+                        return value > 10 ? 'end' : 'center';
+                    },
+                    formatter: function (value, context) {
+                        return value;  // Muestra el valor de cada barra
+                    },
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    color: 'black',  // Color de las etiquetas
+                    offset: 10  // Aumenta el espacio entre la etiqueta y la barra
+                }
+            }
+        },
+        plugins: [ChartDataLabels]  // Activa el plugin de etiquetas
+    });
+
+    const ctx3 = document.getElementById('myLineChart').getContext('2d');
+    const myLineChart = new Chart(ctx3, {
+        type: 'line',
+        data: {
+            labels: ['DC1', 'DC2', 'DC3', 'DC4', 'DC5', 'DC6', 'DC7', 'DC8', 'DC9', 'OAL'], // Eje X
+            datasets: [
+                {
+                    label: 'Derivaciones a Centro de Mediación',
+                    data: [387, 405, 345, 414, 357, 58, 40, 22, 306, 7], // Valores para la primera serie
+                    borderColor: 'rgba(255, 99, 132, 1)', // Color de la línea
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)', // Color del área bajo la línea
+                    fill: true, // Para rellenar debajo de la línea
+                    tension: 0.1 // Suavizado de la línea
+                },
+                {
+                    label: 'Rdo. Mediación E.J. CON Acuerdo',
+                    data: [0, 0, 0, 0, 0, 1, 0, 0, 0, 1], // Valores para la segunda serie
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    fill: true,
+                    tension: 0.1
+                },
+                {
+                    label: 'Rdo. Mediación E.J. SIN Acuerdo',
+                    data: [8, 10, 5, 6, 9, 4, 7, 3, 2, 4], // Valores para la tercera serie
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true,
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true // Para que el eje Y comience en 0
+                }
+            }
+        }
+    });
+</script>
