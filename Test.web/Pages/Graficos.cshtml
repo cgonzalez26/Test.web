@@ -1,7 +1,7 @@
 ﻿@page
 @model Test.web.Pages.GraficosModel
 @{
-    ViewData["Title"] = "Gráficos con ChartJs";
+    ViewData["Title"] = "Estadísticas";
 }
 <style>
     .contenedor{
@@ -20,11 +20,21 @@
 </style>
 <h1>@ViewData["Title"]</h1>
 
-<p>Test de Gráficos.</p>
-<div class="contenedor">
-   
+Tipo de Dependencia:
+<select id="tipoDependenciaSelect" class="form-control" onchange="onTipoDependenciaChange()">
+    <option value="">Seleccione un tipo de dependencia</option>
+</select>
+
+<!-- Select para los Años (Inicialmente oculto) -->
+<div id="selectAnioContainer" style="display:none;">
+    <label for="anio">Año:</label>
+    <select id="anio" class="form-control"></select>
+</div>
+
+<div class="contenedor">    
+
     <div class="child">
-        <canvas id="barChart" width="400" height="600"></canvas>
+        <canvas id="barhorizontalChart" width="400" height="600"></canvas>
     </div>
 
     <div class="child">
@@ -39,61 +49,112 @@
     </div>
 </div>
 
-<script>
-    var ctx = document.getElementById('myPieChart').getContext('2d');
-    var myPieChart = new Chart(ctx, {
-        type: 'pie',  // Tipo de gráfico
-        data: {
-            labels: ['DC1','DC2','DC3','DC4','DC5','DC6','DC7','DC8','DC9','OAL'], // Etiquetas para las porciones
-            datasets: [{
-                label: 'Derivaciones a Centro de Mediación',
-                data: [387,405, 345, 414, 357, 58, 40, 22, 306, 7],  // Datos de ejemplo
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.8)',  // Color 1
-                    'rgba(54, 162, 235, 0.8)',  // Color 2
-                    'rgba(255, 206, 86, 0.8)',  // Color 3
-                    'rgba(75, 192, 192, 0.8)',  // Color 4
-                    'rgba(153, 102, 255, 0.8)', // Color 5
-                    'rgba(255, 159, 64, 0.8)',  // Color 6
-                    'rgba(201, 203, 207, 0.8)', // Color 7
-                    'rgba(93, 172, 129, 0.8)',  // Color 8
-                    'rgba(139, 222, 224, 0.8)', // Color 9
-                    'rgba(174, 126, 252, 0.8)'  // Color 10
-                ],
-                borderColor: [
-                    'rgba(255, 255, 255, 1)',
-                ],
-                borderWidth: 1
-            }]
-        },      
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'MEDIACION'  // Título del gráfico
-                },
-                datalabels: {
-                    color: '#000', // Color del texto dentro de cada rodaja
-                    /*formatter: (value, context) => {
-                        let sum = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        let percentage = (value * 100 / sum).toFixed(2) + "%";
-                        return percentage; // Muestra el porcentaje dentro de cada rodaja
-                    },*/
-                    font: {
-                        weight: 'bold',
-                        size: 14
-                    }
-                }
-            }
-        },
-        plugins: [ChartDataLabels]
+<script>    
+    //Rellenar el Select de Tipo de Dependencia
+    document.addEventListener("DOMContentLoaded", function () {
+        cargarTiposDependencias(); // Cargar dependencias desde la API al iniciar la página
     });
+    // Función para manejar el cambio del tipo de dependencia
+    function onTipoDependenciaChange() {
+        var tipoDependencia = document.getElementById("tipoDependenciaSelect").value;
     
+        if (tipoDependencia) {
+            // Mostrar el select de años
+            document.getElementById("selectAnioContainer").style.display = "block";
+            cargarAnios(); // Llenar el select de años
+        } else {
+            // Ocultar el select de años si no se selecciona un tipo de dependencia
+            document.getElementById("selectAnioContainer").style.display = "none";
+        }
+    }
 
-    var ctx = document.getElementById('barChart').getContext('2d');
+    // Función para cargar los años desde 2007 hasta el año actual
+    function cargarAnios() {
+        var anioSelect = document.getElementById("anio");
+        anioSelect.innerHTML = ""; // Limpiar el select
+    
+        var currentYear = new Date().getFullYear();
+        for (var year = currentYear; year >= 2007; year--) {
+            var option = document.createElement("option");
+            option.value = year;
+            option.text = year;
+            anioSelect.appendChild(option);
+        }
+    }
 
-    var myBarChart = new Chart(ctx, {
+    // Función para cargar los tipos de dependencia desde la API
+    function cargarTiposDependencias() {
+        fetch('http://localhost:5233/api/dependencias/tipos')
+            .then(response => response.json())
+            .then(data => {
+                var select = document.getElementById("tipoDependenciaSelect");
+                data.forEach(function (item) {
+                    var option = document.createElement("option");
+                    option.value = item.id; // El ID de la dependencia
+                    option.text = item.tipo; // El nombre de la dependencia
+                    select.add(option);
+                });
+            })
+            .catch(error => console.error('Error fetching dependencias:', error));   
+    }
+
+    // Obtener los datos de la API
+    async function fetchChartData() {
+        const response = await fetch('http://localhost:5233/api/Reportes/horizontal-bar');
+        const data = await response.json();
+
+        // Configuración del gráfico
+        const ctx = document.getElementById('barhorizontalChart').getContext('2d');
+        const myHorizontalBarChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: data.datasets
+            },
+            options: {
+                indexAxis: 'y', // Hace que las barras sean horizontales
+                scales: {
+                    x: {
+                        beginAtZero: true // Empieza desde cero en el eje X
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false,  // Ajusta el tamaño del gráfico
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'NO JUDICIALIZADOS'  // Título del gráfico
+                    },
+                    // Plugin para mostrar etiquetas dentro de las barras
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'left',  // Ajusta la posición dentro de las barras
+                        anchor: 'center',  // Posiciona la etiqueta en el centro de la barra
+                        align: 'center',   // Alinea la etiqueta dentro de la barra
+                        offset: -10,  // Ajusta la distancia entre la etiqueta y el borde de la barra
+                        formatter: function (value, context) {
+                            return value;  // Muestra el valor de cada barra
+                        },
+                        font: {
+                            weight: 'bold',
+                            size: 11
+                        },
+                        color: 'black'  // Color de las etiquetas
+                    }
+                },
+                // Ajusta el espaciado entre barras
+                categoryPercentage: 0.8,  // Controla el porcentaje de espacio disponible para cada categoría
+                barPercentage: 0.9  // Controla el espacio que ocupa cada barra dentro de su categoría
+            },
+            plugins: [ChartDataLabels]  // Activa el plugin de etiquetas
+        });
+    }
+
+    // Llamar a la función para cargar el gráfico
+    fetchChartData();
+
+    /*var ctx1 = document.getElementById('barhorizontalChart').getContext('2d');
+    var myBarChart = new Chart(ctx1, {
         type: 'bar',  // Tipo de gráfico
         data: {
             labels: ['DC1', 'DC2', 'DC3', 'DC4', 'DC5', 'DC6', 'DC7', 'DC8', 'DC9', 'OAL'],  // Etiquetas del eje X
@@ -105,7 +166,7 @@
                     borderColor: 'rgba(255, 99, 132, 1)',
                     borderWidth: 1,
                     barThickness: 15,  // Ajusta el ancho de las barras
-                    /*minBarLength: 100  // Longitud mínima de las barras*/
+                    /*minBarLength: 100  // Longitud mínima de las barras
                 },
                 {
                     label: 'Derivaciones de MD no Iniciadas',
@@ -142,7 +203,7 @@
                 // Plugin para mostrar etiquetas dentro de las barras
                 datalabels: {
                     /*anchor: 'end',
-                    align: 'left',  // Ajusta la posición dentro de las barras*/
+                    align: 'left',  // Ajusta la posición dentro de las barras
                     anchor: 'center',  // Posiciona la etiqueta en el centro de la barra
                     align: 'center',   // Alinea la etiqueta dentro de la barra
                     offset: -10,  // Ajusta la distancia entre la etiqueta y el borde de la barra
@@ -161,11 +222,10 @@
             barPercentage: 0.9  // Controla el espacio que ocupa cada barra dentro de su categoría
         },
         plugins: [ChartDataLabels]  // Activa el plugin de etiquetas
-    });
+    });*/
 
-    var ctx = document.getElementById('barverticalChart').getContext('2d');
-
-    var myBarChart = new Chart(ctx, {
+    var ctx2 = document.getElementById('barverticalChart').getContext('2d');
+    var myBarChart = new Chart(ctx2, {
         type: 'bar',  // Tipo de gráfico (barra vertical)
         data: {
             labels: ['DC1', 'DC2', 'DC3', 'DC4', 'DC5', 'DC6', 'DC7', 'DC8', 'DC9', 'OAL'],  // Etiquetas del eje X
@@ -250,7 +310,57 @@
         plugins: [ChartDataLabels]  // Activa el plugin de etiquetas
     });
 
-    const ctx3 = document.getElementById('myLineChart').getContext('2d');
+    var ctx3 = document.getElementById('myPieChart').getContext('2d');
+    var myPieChart = new Chart(ctx3, {
+        type: 'pie',  // Tipo de gráfico
+        data: {
+            labels: ['DC1','DC2','DC3','DC4','DC5','DC6','DC7','DC8','DC9','OAL'], // Etiquetas para las porciones
+            datasets: [{
+                label: 'Derivaciones a Centro de Mediación',
+                data: [387,405, 345, 414, 357, 58, 40, 22, 306, 7],  // Datos de ejemplo
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',  // Color 1
+                    'rgba(54, 162, 235, 0.8)',  // Color 2
+                    'rgba(255, 206, 86, 0.8)',  // Color 3
+                    'rgba(75, 192, 192, 0.8)',  // Color 4
+                    'rgba(153, 102, 255, 0.8)', // Color 5
+                    'rgba(255, 159, 64, 0.8)',  // Color 6
+                    'rgba(201, 203, 207, 0.8)', // Color 7
+                    'rgba(93, 172, 129, 0.8)',  // Color 8
+                    'rgba(139, 222, 224, 0.8)', // Color 9
+                    'rgba(174, 126, 252, 0.8)'  // Color 10
+                ],
+                borderColor: [
+                    'rgba(255, 255, 255, 1)',
+                ],
+                borderWidth: 1
+            }]
+        },      
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'MEDIACION'  // Título del gráfico
+                },
+                datalabels: {
+                    color: '#000', // Color del texto dentro de cada rodaja
+                    /*formatter: (value, context) => {
+                        let sum = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        let percentage = (value * 100 / sum).toFixed(2) + "%";
+                        return percentage; // Muestra el porcentaje dentro de cada rodaja
+                    },*/
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+
+    /*const ctx3 = document.getElementById('myLineChart').getContext('2d');
     const myLineChart = new Chart(ctx3, {
         type: 'line',
         data: {
@@ -290,5 +400,5 @@
                 }
             }
         }
-    });
+    });*/
 </script>
