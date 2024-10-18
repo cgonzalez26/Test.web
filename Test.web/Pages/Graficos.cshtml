@@ -20,16 +20,19 @@
 </style>
 <h1>@ViewData["Title"]</h1>
 
-Tipo de Dependencia:
-<select id="tipoDependenciaSelect" class="form-control" onchange="onTipoDependenciaChange()">
-    <option value="">Seleccione un tipo de dependencia</option>
-</select>
+<form id="filterForm">
+    Tipo de Dependencia:
+    <select id="tipoDependenciaSelect" class="form-control" onchange="onTipoDependenciaChange()">
+        <option value="">Seleccione un tipo de dependencia</option>
+    </select>
 
-<!-- Select para los Años (Inicialmente oculto) -->
-<div id="selectAnioContainer" style="display:none;">
-    <label for="anio">Año:</label>
-    <select id="anio" class="form-control"></select>
-</div>
+    <!-- Select para los Años (Inicialmente oculto) -->
+    <div id="selectAnioContainer" style="display:none;">
+        <label for="anio">Año:</label>
+        <select id="anio" class="form-control"></select>
+    </div>
+    <button type="submit">Filtrar</button>
+</form>
 
 <div class="contenedor">    
 
@@ -151,7 +154,7 @@ Tipo de Dependencia:
     }
 
     // Llamar a la función para cargar el gráfico
-    fetchChartData();
+    //fetchChartData();
 
     /*var ctx1 = document.getElementById('barhorizontalChart').getContext('2d');
     var myBarChart = new Chart(ctx1, {
@@ -401,4 +404,89 @@ Tipo de Dependencia:
             }
         }
     });*/
+
+    // Variable para almacenar la referencia al gráfico
+    let myChart = null;
+
+    // Función para cargar y actualizar el gráfico
+    async function loadChart(tipoDependencia, anio) {
+        const response = await fetch(`http://localhost:5233/api/Reportes/horizontal-bar?tipoDependencia=${tipoDependencia}&anio=${anio}`);
+        if (!response.ok) {
+            throw new Error(`Error en la API: ${response.status}`);
+        }
+        const chartData = await response.json();
+
+        console.log(chartData);
+        // Extrae las etiquetas (labels) y los datasets del objeto devuelto
+        const labels = chartData.labels; // Esto es un array de etiquetas
+        const datasets = chartData.datasets; // Esto es un array de datasets
+
+
+        // Procesar los datos recibidos para Chart.js
+        //const labels = chartData.map(data => data.categoria);
+        //const noIngresadas = chartData.map(data => data.derivacionesNoIngresadas);
+        //const noIniciadas = chartData.map(data => data.derivacionesNoIniciadas);
+        //const enConsulta = chartData.map(data => data.derivacionesEnConsulta);
+
+        // Crear o actualizar el gráfico
+        const ctx = document.getElementById('barhorizontalChart').getContext('2d');
+
+        // Verificar si ya existe un gráfico, si es así, destruirlo
+        if (myChart !== null) {
+            myChart.destroy();  // Destruye el gráfico anterior
+        }
+
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: datasets
+                /*datasets: [
+                    {
+                        label: 'Derivaciones de MD no Ingresadas',
+                        data: noIngresadas,
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Derivaciones de MD no Iniciadas',
+                        data: noIniciadas,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Derivaciones de MD en Consulta',
+                        data: enConsulta,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }
+                ]*/
+            },
+            options: {
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Event listener para cuando se envía el formulario
+    document.getElementById('filterForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        // Obtener los valores seleccionados por el usuario
+        const tipoDependencia = document.getElementById('tipoDependenciaSelect').value;
+        const anio = document.getElementById('anio').value;
+
+        // Llamar a la función para cargar los datos del gráfico
+        loadChart(tipoDependencia, anio);
+    });
 </script>
