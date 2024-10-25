@@ -1,0 +1,351 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewData["Title"] = "Estadísticas";
+}
+<style>
+    .contenedor {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        gap: 1em; /* Espacio entre los divs */
+    }
+
+    .child {
+        flex: 1; /* Cada div ocupará el 50% del ancho del contenedor */
+        padding: 10px;
+        text-align: center;
+        gap:
+    }
+</style>
+<h1>@ViewData["Title"]</h1>
+
+<form id="filterForm">
+    Tipo de Dependencia:
+    <select id="tipoDependenciaSelect" class="form-control" onchange="onTipoDependenciaChange()">
+        <option value="">Seleccione un tipo de dependencia</option>
+    </select>
+
+    <!-- Select para los Años (Inicialmente oculto) -->
+    <div id="selectAnioContainer" style="display:none;">
+        <label for="anio">Año:</label>
+        <select id="anio" class="form-control"></select>
+    </div>
+    <button type="submit">Filtrar</button>
+</form>
+
+<div class="container">
+    <div class="row">
+        <!-- En resoluciones grandes (md y superiores) los div ocuparán 6 columnas cada uno (paralelos) -->
+        <!-- En móviles (xs) ocuparán 12 columnas cada uno (uno debajo del otro) -->
+        <div class="col-md-6 col-12">
+            <div class="p-3">
+                <canvas id="barhorizontalChart1" height="600"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6 col-12">
+            <div class="p-3">
+                <canvas id="barhorizontalChart2" height="600"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+    <!--<div class="child">
+        <canvas id="myPieChart" height="400"></canvas>
+    </div>-->
+
+<script>
+    //Rellenar el Select de Tipo de Dependencia
+    document.addEventListener("DOMContentLoaded", function () {
+        cargarTiposDependencias(); // Cargar dependencias desde la API al iniciar la página
+    });
+    // Función para manejar el cambio del tipo de dependencia
+    function onTipoDependenciaChange() {
+        var tipoDependencia = document.getElementById("tipoDependenciaSelect").value;
+
+        if (tipoDependencia) {
+            // Mostrar el select de años
+            document.getElementById("selectAnioContainer").style.display = "block";
+            cargarAnios(); // Llenar el select de años
+        } else {
+            // Ocultar el select de años si no se selecciona un tipo de dependencia
+            document.getElementById("selectAnioContainer").style.display = "none";
+        }
+    }
+
+    // Función para cargar los años desde 2007 hasta el año actual
+    function cargarAnios() {
+        var anioSelect = document.getElementById("anio");
+        anioSelect.innerHTML = ""; // Limpiar el select
+
+        var currentYear = new Date().getFullYear();
+        for (var year = currentYear; year >= 2007; year--) {
+            var option = document.createElement("option");
+            option.value = year;
+            option.text = year;
+            anioSelect.appendChild(option);
+        }
+    }
+    // Función para cargar los tipos de dependencia desde la API
+    function cargarTiposDependencias() {
+        fetch('http://localhost:5208/tipos')
+            .then(response => response.json())
+            .then(data => {
+                var select = document.getElementById("tipoDependenciaSelect");
+                data.forEach(function (item) {
+                    var option = document.createElement("option");
+                    option.value = item.id; // El ID de la dependencia
+                    option.text = item.tipo; // El nombre de la dependencia
+                    select.add(option);
+                });
+            })
+            .catch(error => console.error('Error fetching dependencias:', error));
+    }
+
+     // Variable para almacenar la referencia al gráfico
+    let myChart = null;
+
+    // Función para cargar y actualizar el gráfico
+    async function loadChart(tipoDependencia, anio) {
+        const response = await fetch(`http://localhost:5208/api/Estadisticas/horizontal-bar?tipoDependencia=${tipoDependencia}&anio=${anio}`);
+        if (!response.ok) {
+            throw new Error(`Error en la API: ${response.status}`);
+        }
+        const chartData = await response.json();
+
+        console.log(chartData);
+        // Extrae las etiquetas (labels) y los datasets del objeto devuelto
+        const labels = chartData.labels; // Esto es un array de etiquetas
+        const datasets = chartData.datasets; // Esto es un array de datasets
+
+        // Crear o actualizar el gráfico
+        const ctx = document.getElementById('barhorizontalChart1').getContext('2d');
+
+        // Verificar si ya existe un gráfico, si es así, destruirlo
+        if (myChart !== null) {
+            myChart.destroy();  // Destruye el gráfico anterior
+        }
+
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                indexAxis: 'y', // Hace que las barras sean horizontales
+                scales: {
+                    x: {
+                        beginAtZero: true // Empieza desde cero en el eje X
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false,  // Ajusta el tamaño del gráfico
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Proceso Extrajudicial',
+                        font: {
+                            size: 24, // Cambia el tamaño de la fuente
+                            //family: 'Arial', // Puedes elegir la fuente que prefieras
+                            weight: 'bold' // Opcional: estilo de fuente
+                        }// Título del gráfico
+                    },
+                    // Plugin para mostrar etiquetas dentro de las barras
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'left',  // Ajusta la posición dentro de las barras
+                        anchor: 'center',  // Posiciona la etiqueta en el centro de la barra
+                        align: 'center',   // Alinea la etiqueta dentro de la barra
+                        offset: -10,  // Ajusta la distancia entre la etiqueta y el borde de la barra
+                        formatter: function (value, context) {
+                            return value;  // Muestra el valor de cada barra
+                        },
+                        font: {
+                            weight: 'bold',
+                            size: 11
+                        },
+                        color: 'black'  // Color de las etiquetas
+                    }
+                },
+                // Ajusta el espaciado entre barras
+                categoryPercentage: 0.8,  // Controla el porcentaje de espacio disponible para cada categoría
+                barPercentage: 0.9  // Controla el espacio que ocupa cada barra dentro de su categoría
+            },
+            plugins: [ChartDataLabels]  // Activa el plugin de etiquetas
+        });
+    }
+
+    // Variable para almacenar la referencia al gráfico
+    let myChart2 = null;
+    // Función para cargar y actualizar el gráfico
+    async function loadChart2(tipoDependencia, anio) {
+        const response = await fetch(`http://localhost:5208/api/Estadisticas/horizontal-bar2?tipoDependencia=${tipoDependencia}&anio=${anio}`);
+        if (!response.ok) {
+            throw new Error(`Error en la API: ${response.status}`);
+        }
+        const chartData = await response.json();
+
+        console.log(chartData);
+        // Extrae las etiquetas (labels) y los datasets del objeto devuelto
+        const labels = chartData.labels; // Esto es un array de etiquetas
+        const datasets = chartData.datasets; // Esto es un array de datasets
+
+        // Crear o actualizar el gráfico
+        const ctx = document.getElementById('barhorizontalChart2').getContext('2d');
+
+        // Verificar si ya existe un gráfico, si es así, destruirlo
+        if (myChart2 !== null) {
+            myChart2.destroy();  // Destruye el gráfico anterior
+        }
+
+        myChart2 = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                indexAxis: 'y', // Hace que las barras sean horizontales
+                scales: {
+                    x: {
+                        beginAtZero: true // Empieza desde cero en el eje X
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false,  // Ajusta el tamaño del gráfico
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Proceso Judicial',  // Título del gráfico
+                        font: {
+                            size: 24, // Cambia el tamaño de la fuente
+                            //family: 'Arial', // Puedes elegir la fuente que prefieras
+                            weight: 'bold' // Opcional: estilo de fuente
+                        }
+                    },
+                    // Plugin para mostrar etiquetas dentro de las barras
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'left',  // Ajusta la posición dentro de las barras
+                        anchor: 'center',  // Posiciona la etiqueta en el centro de la barra
+                        align: 'center',   // Alinea la etiqueta dentro de la barra
+                        offset: -10,  // Ajusta la distancia entre la etiqueta y el borde de la barra
+                        formatter: function (value, context) {
+                            return value;  // Muestra el valor de cada barra
+                        },
+                        font: {
+                            weight: 'bold',
+                            size: 11
+                        },
+                        color: 'black'  // Color de las etiquetas
+                    }
+                },
+                // Ajusta el espaciado entre barras
+                categoryPercentage: 0.8,  // Controla el porcentaje de espacio disponible para cada categoría
+                barPercentage: 0.9  // Controla el espacio que ocupa cada barra dentro de su categoría
+            },
+            plugins: [ChartDataLabels]  // Activa el plugin de etiquetas
+        });
+    }
+
+    // Event listener para cuando se envía el formulario
+    document.getElementById('filterForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        // Obtener los valores seleccionados por el usuario
+        const tipoDependencia = document.getElementById('tipoDependenciaSelect').value;
+        const anio = document.getElementById('anio').value;
+
+        // Llamar a la función para cargar los datos del gráfico
+        loadChart(tipoDependencia, anio);
+
+        //Grafico Proceso Judicial
+        loadChart2(tipoDependencia, anio);
+    });
+
+    /*var ctx2 = document.getElementById('barverticalChart').getContext('2d');
+    var myBarChart = new Chart(ctx2, {
+        type: 'bar',  // Tipo de gráfico (barra vertical)
+        data: {
+            labels: ['DC1', 'DC2', 'DC3', 'DC4', 'DC5', 'DC6', 'DC7', 'DC8', 'DC9', 'OAL'],  // Etiquetas del eje X
+            datasets: [
+                {
+                    label: 'Causas Iniciadas',
+                    data: [161, 288, 499, 216, 297, 73, 59, 99, 510, 31], // Valores de ejemplo
+                    backgroundColor: '#1998CB',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Causas En Trámite',
+                    data: [850, 850, 872, 790, 887, 566, 552, 400, 772, 19], // Valores de ejemplo
+                    backgroundColor: '#14CC60',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Causas Terminadas',
+                    data: [289, 411, 756, 316, 316, 143, 23, 311, 445, 34], // Valores de ejemplo
+                    backgroundColor: '#F0CD13',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Causas Por Ausente',
+                    data: [0, 3, 5, 4, 1, 16, 3, 31, 5, 3], // Valores de ejemplo
+                    backgroundColor: '#FF696B',
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            scales: {
+                x: {
+                    beginAtZero: true, // Empieza desde cero en el eje X
+                    grid: {
+                        offset: true
+                    }
+                  
+                },
+                y: {
+                    beginAtZero: true, // Empieza desde cero en el eje Y
+                   
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false,  // Ajusta el tamaño del gráfico
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'MOVIMIENTOS'  // Título del gráfico
+                },
+                // Plugin para mostrar etiquetas encima de las barras
+                datalabels: {
+                    anchor: 'end',
+                    
+                    align: function (context) {
+                        // Si el valor es muy alto, ajusta las etiquetas para que no se superpongan
+                        const index = context.dataIndex;
+                        const value = context.dataset.data[index];
+                        return value > 10 ? 'end' : 'center';
+                    },
+                    formatter: function (value, context) {
+                        return value;  // Muestra el valor de cada barra
+                    },
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    color: 'black',  // Color de las etiquetas
+                    offset: 10  // Aumenta el espacio entre la etiqueta y la barra
+                }
+            }
+        },
+        plugins: [ChartDataLabels]  // Activa el plugin de etiquetas
+    });*/
+
+
+</script>

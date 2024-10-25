@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "7ka/VTjJ3xlyEquUVZfrLc6MsLpvEJXRSMZtT+bzcimD+J3TSxiVDUxFA00Uh5a9gilYBtVdIPue2TKnlLwtxA==",
+  "dgSpecHash": "ncwT+CVlq5gaymulLfmOXgM4WKqriYbZmicRLvEUuv7v+0k18AuG1qNkW6o7dV5ClMS5X+GfZUM0g7VCfxaVbw==",
   "success": true,
   "projectFilePath": "C:\\Users\\usmp\\source\\repos\\Test.web\\Test.web\\Test.web.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\usmp\\.nuget\\packages\\chart.js\\3.7.1\\chart.js.3.7.1.nupkg.sha512"
+  ],
   "logs": []
 }

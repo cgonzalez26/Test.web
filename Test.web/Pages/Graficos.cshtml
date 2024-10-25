@@ -37,18 +37,18 @@
 <div class="contenedor">    
 
     <div class="child">
-        <canvas id="barhorizontalChart" width="400" height="600"></canvas>
+        <canvas id="barhorizontalChart" height="600"></canvas>
     </div>
 
     <div class="child">
-        <canvas id="barverticalChart" width="400" height="400"></canvas>
+        <canvas id="barverticalChart"  height="400"></canvas>
     </div>
 
     <!--<div class="child">
         <canvas id="myLineChart" width="400" height="200"></canvas>
     </div>-->
     <div class="child">
-        <canvas id="myPieChart" width="400" height="400"></canvas>
+        <canvas id="myPieChart"  height="400"></canvas>
     </div>
 </div>
 
@@ -466,15 +466,41 @@
                 ]*/
             },
             options: {
+                indexAxis: 'y', // Hace que las barras sean horizontales
                 scales: {
                     x: {
-                        beginAtZero: true
-                    },
-                    y: {
-                        beginAtZero: true
+                        beginAtZero: true // Empieza desde cero en el eje X
                     }
-                }
-            }
+                },
+                responsive: true,
+                maintainAspectRatio: false,  // Ajusta el tamaño del gráfico
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'NO JUDICIALIZADOS'  // Título del gráfico
+                    },
+                    // Plugin para mostrar etiquetas dentro de las barras
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'left',  // Ajusta la posición dentro de las barras
+                        anchor: 'center',  // Posiciona la etiqueta en el centro de la barra
+                        align: 'center',   // Alinea la etiqueta dentro de la barra
+                        offset: -10,  // Ajusta la distancia entre la etiqueta y el borde de la barra
+                        formatter: function (value, context) {
+                            return value;  // Muestra el valor de cada barra
+                        },
+                        font: {
+                            weight: 'bold',
+                            size: 11
+                        },
+                        color: 'black'  // Color de las etiquetas
+                    }
+                },
+                // Ajusta el espaciado entre barras
+                categoryPercentage: 0.8,  // Controla el porcentaje de espacio disponible para cada categoría
+                barPercentage: 0.9  // Controla el espacio que ocupa cada barra dentro de su categoría
+            },
+            plugins: [ChartDataLabels]  // Activa el plugin de etiquetas
         });
     }
 
