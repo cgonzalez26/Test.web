@@ -317,21 +317,21 @@
     var myPieChart = new Chart(ctx3, {
         type: 'pie',  // Tipo de gráfico
         data: {
-            labels: ['DC1','DC2','DC3','DC4','DC5','DC6','DC7','DC8','DC9','OAL'], // Etiquetas para las porciones
+            labels: ['En trámite','Terminadas'], // Etiquetas para las porciones
             datasets: [{
-                label: 'Derivaciones a Centro de Mediación',
-                data: [387,405, 345, 414, 357, 58, 40, 22, 306, 7],  // Datos de ejemplo
+                label: 'Familia',
+                data: [387,405],  // Datos de ejemplo
                 backgroundColor: [
-                    'rgba(255, 99, 132, 0.8)',  // Color 1
-                    'rgba(54, 162, 235, 0.8)',  // Color 2
-                    'rgba(255, 206, 86, 0.8)',  // Color 3
-                    'rgba(75, 192, 192, 0.8)',  // Color 4
+                    /*'rgba(255, 99, 132, 0.8)',  // Color 1
+                    'rgba(54, 162, 235, 0.8)',  // Color 2*/
+                    /*'rgba(255, 206, 86, 0.8)',  // Color 3
+                    'rgba(75, 192, 192, 0.8)',  // Color 4*/
                     'rgba(153, 102, 255, 0.8)', // Color 5
                     'rgba(255, 159, 64, 0.8)',  // Color 6
-                    'rgba(201, 203, 207, 0.8)', // Color 7
+                    /*'rgba(201, 203, 207, 0.8)', // Color 7
                     'rgba(93, 172, 129, 0.8)',  // Color 8
                     'rgba(139, 222, 224, 0.8)', // Color 9
-                    'rgba(174, 126, 252, 0.8)'  // Color 10
+                    'rgba(174, 126, 252, 0.8)'  // Color 10*/
                 ],
                 borderColor: [
                     'rgba(255, 255, 255, 1)',
@@ -344,7 +344,7 @@
             plugins: {
                 title: {
                     display: true,
-                    text: 'MEDIACION'  // Título del gráfico
+                    text: 'Familia'  // Título del gráfico
                 },
                 datalabels: {
                     color: '#000', // Color del texto dentro de cada rodaja
@@ -501,6 +501,56 @@
                 barPercentage: 0.9  // Controla el espacio que ocupa cada barra dentro de su categoría
             },
             plugins: [ChartDataLabels]  // Activa el plugin de etiquetas
+        });
+
+        var ctx3 = document.getElementById('myPieChart').getContext('2d');
+        var myPieChart = new Chart(ctx3, {
+            type: 'pie',  // Tipo de gráfico
+            data: {
+                labels: ['En trámite', 'Terminadas'], // Etiquetas para las porciones
+                datasets: [{
+                    label: 'Familia',
+                    data: [387, 405],  // Datos de ejemplo
+                    backgroundColor: [
+                        /*'rgba(255, 99, 132, 0.8)',  // Color 1
+                        'rgba(54, 162, 235, 0.8)',  // Color 2*/
+                        /*'rgba(255, 206, 86, 0.8)',  // Color 3
+                        'rgba(75, 192, 192, 0.8)',  // Color 4*/
+                        'rgba(153, 102, 255, 0.8)', // Color 5
+                        'rgba(255, 159, 64, 0.8)',  // Color 6
+                        /*'rgba(201, 203, 207, 0.8)', // Color 7
+                        'rgba(93, 172, 129, 0.8)',  // Color 8
+                        'rgba(139, 222, 224, 0.8)', // Color 9
+                        'rgba(174, 126, 252, 0.8)'  // Color 10*/
+                    ],
+                    borderColor: [
+                        'rgba(255, 255, 255, 1)',
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Familia'  // Título del gráfico
+                    },
+                    datalabels: {
+                        color: '#000', // Color del texto dentro de cada rodaja
+                        /*formatter: (value, context) => {
+                            let sum = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            let percentage = (value * 100 / sum).toFixed(2) + "%";
+                            return percentage; // Muestra el porcentaje dentro de cada rodaja
+                        },*/
+                        font: {
+                            weight: 'bold',
+                            size: 14
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
         });
     }
 
